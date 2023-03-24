@@ -38,17 +38,19 @@ public class Map_Generate : MonoBehaviour
         Init();
         //顯示點
         Gen_Map();
+        Regenerate_Point();
         //創造邊
         Create_Edge();
         //將邊畫出來
         Visualize_Edge();
         //從地圖最下方往上找路徑生成戰鬥,事件
-        for(int i=0;i<node_width;i++)
-        {
-            node_arr.Add(i);
-            Generate(node_arr, node_height-1, i);
-            node_arr.Clear();
-        }
+        // for(int i=0;i<node_width;i++)
+        // {
+        //     node_arr.Add(i);
+        //     Generate(node_arr, node_height-1, i);
+        //     node_arr.Clear();
+        // }
+        Generate_V2();
         //將被標為戰鬥,事件的點更新
         Show_status();
     }
@@ -280,4 +282,73 @@ public class Map_Generate : MonoBehaviour
                 return Color.black;
         }
     }
+
+    void Regenerate_Point()
+    {
+        for(int i=1;i<node_height;i++)
+        {
+            int valid_num = 0;
+            
+            for(int j=0;j<node_width;j++)
+            {
+                if(nodes[i*node_width+j].Return_valid()==true)
+                {
+                    valid_num++;
+                }
+            }
+            Node[] tmp_nodes = new Node[valid_num];
+            int index = 0;
+            for(int j=0;j<node_width;j++)
+            {
+                if(nodes[i*node_width+j].Return_valid()==true)
+                {
+                    tmp_nodes[index++] = nodes[i*node_width+j];
+                }
+            }
+            float new_space_x = node_size.x * node_width + X_Space * (node_width) - valid_num * node_size.x;
+            new_space_x = new_space_x/(valid_num-1);
+            for(int j=0;j<index;j++)
+            {
+                tmp_nodes[j].node.GetComponent<RectTransform>().offsetMax = new Vector2((j+1)*node_size.x + (j)*new_space_x,-i*node_size.y - (i)*Y_Space);
+                tmp_nodes[j].node.GetComponent<RectTransform>().offsetMin = new Vector2((j)*node_size.x + (j)*new_space_x,-(i+1)*node_size.y - (i)*Y_Space);
+            }
+            
+        }
+    }
+
+    void Generate_V2()
+    {
+        int[] use = new int[node_height];
+        for(int i=0;i<node_height;i++)use[i] = 0;
+        use[0]=1;
+        for(int i=0;i<fight_num;i++)
+        {
+            int x = Random.Range(0,node_height);
+            while(use[x]==1)
+            {            
+                x = x + 1;
+                if(x>=node_height)x=0;
+            }
+            use[x]=1;
+            for(int j=0;j<node_width;j++)
+            {
+                nodes[x*node_width+j].Set_type('f');
+            }
+        }
+        for(int i=0;i<event_num;i++)
+        {
+            int x = Random.Range(0,node_height);
+            while(use[x]==1)
+            {
+                x = x + 1;
+                if(x>=node_height)x=0;
+            }
+            use[x]=1;
+            for(int j=0;j<node_width;j++)
+            {
+                nodes[x*node_width+j].Set_type('e');
+            }
+        }
+    }
 }
+
